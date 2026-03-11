@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="javax.servlet">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../../SDK/Bibliotecas-Sankya-Padroes-LIB-main/repo-bibliotecasJava/javax.servlet.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

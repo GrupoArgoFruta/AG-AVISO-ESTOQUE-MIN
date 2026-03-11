@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sanutil">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../../SDK/Bibliotecas-Sankya-Padroes-LIB-main/repo-bibliotecasJava/sanutil.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

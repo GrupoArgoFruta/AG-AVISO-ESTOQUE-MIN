@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="sanws">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../../SDK/Bibliotecas-Sankya-Padroes-LIB-main/repo-bibliotecasJava/sanws.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

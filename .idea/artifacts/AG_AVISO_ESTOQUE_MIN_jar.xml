@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="AG-AVISO-ESTOQUE-MIN:jar">
+    <output-path>$PROJECT_DIR$/../jars/AG-ESTOQUE-MIN</output-path>
+    <root id="archive" name="AG-AVISO-ESTOQUE-MIN.jar">
+      <element id="module-output" name="AG-AVISO-ESTOQUE-MIN" />
+    </root>
+  </artifact>
+</component>
