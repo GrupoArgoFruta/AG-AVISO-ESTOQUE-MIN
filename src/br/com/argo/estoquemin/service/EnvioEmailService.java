@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 public class EnvioEmailService {
 
     // TODO: Configurar email(s) destinatario(s) do alerta
-    private static final String EMAIL_DESTINATARIO = "almoxarifado.compras@argofruta.com";
+    private static final String EMAIL_DESTINATARIO = "alerta.estoque@argofruta.com";
 
     /**
      * Envia email via fila de mensagens do Sankhya.

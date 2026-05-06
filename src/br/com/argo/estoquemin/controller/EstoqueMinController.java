@@ -28,14 +28,13 @@ import java.util.Locale;
  * -> TGFEST (estoque por controle/local 3030000)</p>
  *
  * <p>Criterio: ESTOQUE <= AD_EST_FICHA AND ESTOQUE > 0</p>
- * <p>Controle: So alerta se nunca alertou (AD_DTALERTA IS NULL)
- *    ou se o estoque mudou desde o ultimo alerta (ESTOQUE <> AD_EST_ALERTADO)</p>
+ * <p>Controle: So alerta 1x por dia via AD_DTALERTA</p>
  *
  * @author Natan - Argo Fruta
- * @version 3.0
+ * @version 4.0
  * @since 2026-03-02
  *
- * Commit: feat(EB-XX): evento agendado alerta estoque baixo com controle de duplicidade
+ * Commit: feat(EB-XX): adicionar lista de cod produtos afetados no alerta via LISTAGG
  */
 public class EstoqueMinController implements ScheduledAction {
 
@@ -77,7 +76,9 @@ public class EstoqueMinController implements ScheduledAction {
                             "    EST.CODLOCAL                   AS CODLOCAL, " +
                             "    EST.ESTOQUE                    AS ESTOQUE_ATUAL, " +
                             "    EST.AD_EST_FICHA               AS LIMITE_ALERTA, " +
-                            "    COUNT(DISTINCT PROUVA.CODPROD) AS QTD_UVAS_AFETADAS " +
+                            "    COUNT(DISTINCT PROUVA.CODPROD) AS QTD_UVAS_AFETADAS, " +
+                            "    LISTAGG(DISTINCT PROUVA.CODPROD, ', ') " +
+                            "        WITHIN GROUP (ORDER BY PROUVA.CODPROD) AS UVAS_AFETADAS " +
                             "FROM TGFPRO PROUVA " +
                             "INNER JOIN AD_FICHATECPROD FTP " +
                             "    ON  FTP.CODPROD = PROUVA.CODPROD " +
@@ -121,12 +122,14 @@ public class EstoqueMinController implements ScheduledAction {
                 BigDecimal estoqueAtual = rset.getBigDecimal("ESTOQUE_ATUAL");
                 BigDecimal limiteAlerta = rset.getBigDecimal("LIMITE_ALERTA");
                 int qtdUvasAfetadas     = rset.getInt("QTD_UVAS_AFETADAS");
+                String uvasAfetadas     = rset.getString("UVAS_AFETADAS");
 
                 mensagemHtml.append("<h4>[" + codInsumo + "] " + descrInsumo + "</h4>");
                 mensagemHtml.append("<p><b>Controle:</b> " + controle + "</p>");
                 mensagemHtml.append("<p><b>Estoque Atual:</b> " + df.format(estoqueAtual) + "</p>");
                 mensagemHtml.append("<p><b>Limite Alerta:</b> " + df.format(limiteAlerta) + "</p>");
-                mensagemHtml.append("<p><b>Produtos Uva afetados:</b> " + qtdUvasAfetadas + "</p>");
+                mensagemHtml.append("<p><b>Cod. Produtos afetados (" + qtdUvasAfetadas + "):</b></p>");
+                mensagemHtml.append("<p>" + uvasAfetadas + "</p>");
                 mensagemHtml.append("<hr>");
 
                 // Guarda pra marcar como alertado depois
@@ -155,7 +158,7 @@ public class EstoqueMinController implements ScheduledAction {
                 String corpoEmail = montarEmailHtml(mensagemHtml.toString(), totalAlertas);
                 envioEmail.enviarEmail(tituloFinal, corpoEmail);
 
-                // Marca como alertado pra nao repetir enquanto estoque nao mudar
+                // Marca como alertado pra nao repetir no mesmo dia
                 marcarComoAlertado(jdbc, itensAlertados);
 
                 ctx.info("Alerta de estoque baixo enviado: " + totalAlertas + " insumo(s) no limite.");
@@ -177,8 +180,7 @@ public class EstoqueMinController implements ScheduledAction {
 
     /**
      * Marca os insumos como alertados na TGFEST para nao repetir.
-     * Grava AD_DTALERTA = SYSDATE e AD_EST_ALERTADO = ESTOQUE atual.
-     * So vai alertar novamente quando o ESTOQUE mudar.
+     * Grava AD_DTALERTA = SYSDATE. So vai alertar novamente no dia seguinte.
      */
     private void marcarComoAlertado(JdbcWrapper jdbc, List<ItemAlerta> itens) throws Exception {
         for (ItemAlerta item : itens) {
@@ -187,7 +189,7 @@ public class EstoqueMinController implements ScheduledAction {
                 updateSql = new NativeSql(jdbc);
                 updateSql.appendSql(
                         "UPDATE TGFEST " +
-                                "SET AD_DTALERTA     = SYSDATE " +
+                                "SET AD_DTALERTA = SYSDATE " +
                                 "WHERE CODPROD  = :CODPROD " +
                                 "  AND CONTROLE = :CONTROLE " +
                                 "  AND CODLOCAL = " + COD_LOCAL_PRODUCAO
